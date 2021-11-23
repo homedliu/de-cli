@@ -1,13 +1,13 @@
 {
-  "name": "@de-cli-dev/core",
-  "version": "0.0.5",
+  "name": "@de-cli/core",
+  "version": "1.0.0",
   "description": "> TODO: description",
   "author": "LiuHongDe <262296804@qq.com>",
   "homepage": "",
   "license": "ISC",
   "main": "lib/index.js",
   "bin": {
-    "de-cli-dev": "bin/index.js"
+    "de-cli": "bin/index.js"
   },
   "directories": {
     "lib": "lib",
@@ -26,5 +26,5 @@
     "import-local": "^3.0.3",
     "npmlog": "^6.0.0"
   },
-  "gitHead": "4dafe4bbc45e17ab01c28b0d6f41a15e8c8c64d9"
+  "gitHead": "c8ed5a7d0224d6151477b1881cbbaedcd2a20f0c"
 }
