@@ -25,5 +25,6 @@
   "dependencies": {
     "import-local": "^3.0.3",
     "npmlog": "^6.0.0"
-  }
+  },
+  "gitHead": "43492f8d13f243242c19310d8e4f25dade2dab4f"
 }
