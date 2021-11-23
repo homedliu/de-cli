@@ -1,0 +1,29 @@
+{
+  "name": "@de-cli-dev/core",
+  "version": "0.0.0",
+  "description": "> TODO: description",
+  "author": "LiuHongDe <262296804@qq.com>",
+  "homepage": "",
+  "license": "ISC",
+  "main": "lib/index.js",
+  "bin": {
+    "de-cli-dev": "bin/index.js"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "dependencies": {
+    "import-local": "^3.0.3",
+    "npmlog": "^6.0.0"
+  }
+}
