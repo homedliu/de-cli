@@ -24,7 +24,10 @@
   },
   "dependencies": {
     "@de-cli/log": "file:../../utils/log",
+    "@de-cli/get-npm-info": "file:../../utils/get-npm-info",
+    "@de-cli/exec": "file:../exec",
     "colors": "^1.4.0",
+    "commander": "^8.3.0",
     "dotenv": "^10.0.0",
     "import-local": "^3.0.3",
     "npmlog": "^6.0.0",
