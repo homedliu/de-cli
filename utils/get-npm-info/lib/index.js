@@ -56,7 +56,18 @@ async function getNpmVersions(npmName, registry) {
   }
 }
 
+//获取npm最新版本号
+async function getNpmLatestVersion(npmName, registry) {
+  const versions = await getNpmVersions(npmName, registry)
+  if (versions) {
+    return versions.sort((a, b) => semver.gt(b, a))[0]
+  }
+  return null
+}
+
 module.exports = {
   getNpmInfo,
   getNpmSemverVersion,
+  getNpmLatestVersion,
+  getDefaultRegistry,
 }

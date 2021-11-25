@@ -1,5 +1,5 @@
 {
-  "name": "@de-cli/package",
+  "name": "@de-cli/format-path",
   "version": "1.0.1",
   "description": "> TODO: description",
   "author": "LiuHongDe <262296804@qq.com>",
@@ -25,14 +25,5 @@
   },
   "bugs": {
     "url": "https://github.com/homedliu/de-cli-dev/issues"
-  },
-  "dependencies": {
-    "@de-cli/format-path": "file:../../utils/format-path",
-    "@de-cli/get-npm-info": "file:../../utils/get-npm-info",
-    "@de-cli/utils": "file:../../utils/utils",
-    "fs-extra": "^10.0.0",
-    "npminstall": "^5.2.2",
-    "path-exists": "4.0.0",
-    "pkg-dir": "5.0.0"
   }
 }
