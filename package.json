@@ -10,8 +10,5 @@
   "devDependencies": {},
   "publishConfig": {
     "access": "public"
-  },
-  "dependencies": {
-    "@de-cli/core": "^1.0.1"
   }
 }

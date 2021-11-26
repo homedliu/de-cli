@@ -3,6 +3,7 @@
 const path = require('path')
 const Package = require('@de-cli/package')
 const log = require('@de-cli/log')
+const { exec: spawn } = require('@de-cli/utils')
 
 const CACHE_DIR = 'dependencies'
 const SETTINGS = {
@@ -55,6 +56,7 @@ async function exec() {
     try {
       // 在当前进程中调用
       // require(rootFile).call(null, Array.from(arguments))
+      // require(rootFile)(Array.from(arguments))
       // 在node子进程中调用
       const args = Array.from(arguments)
       const cmd = args[args.length - 1]
@@ -70,13 +72,23 @@ async function exec() {
           o[key] = cmd[key]
         }
       })
-      args[args.length-1]=o
-      
+      args[args.length - 1] = o
+      const code = `require('${rootFile}')(${JSON.stringify(args)})`
+      const child = spawn('node', ['-e', code], {
+        cwd: process.cwd(),
+        stdio: 'inherit',
+      })
+      child.on('error', (e) => {
+        log.error(e.message)
+        process.exit(1)
+      })
+      child.on('exit', (e) => {
+        log.verbose('命令执行成功：' + e)
+        process.exit(e)
+      })
     } catch (e) {
       log.error(e)
     }
   }
-
-  console.log(pkg.getRootFilePath())
 }
 module.exports = exec

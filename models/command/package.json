@@ -1,5 +1,5 @@
 {
-  "name": "@de-cli/exec",
+  "name": "@de-cli/command",
   "version": "1.0.1",
   "description": "> TODO: description",
   "author": "LiuHongDe <262296804@qq.com>",
@@ -27,8 +27,8 @@
     "url": "https://github.com/homedliu/de-cli-dev/issues"
   },
   "dependencies": {
-    "@de-cli/package": "file:../../models/package",
     "@de-cli/log": "file:../../utils/log",
-    "@de-cli/utils": "file:../../utils/utils"
+    "colors": "^1.4.0",
+    "semver": "^7.3.5"
   }
 }
