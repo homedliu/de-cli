@@ -28,6 +28,8 @@
   },
   "dependencies": {
     "@de-cli/command": "file:../../models/command",
-    "@de-cli/log": "file:../../utils/log"
+    "@de-cli/log": "file:../../utils/log",
+    "fs-extra": "^10.0.0",
+    "inquirer": "^8.2.0"
   }
 }
