@@ -6,6 +6,7 @@ const Command = require('@de-cli/command')
 const log = require('@de-cli/log')
 const inquirer = require('inquirer')
 const semver = require('semver')
+const getProjectTemplate = require('./getProjectTemplate')
 
 const TYPE_PROJECT = 'project'
 const TYPE_COMPONENT = 'component'
@@ -23,9 +24,11 @@ class InitCommand extends Command {
       const projectInfo = await this.prepare()
       if (projectInfo) {
         log.verbose('projectInfo', projectInfo)
+        this.projectInfo = projectInfo
         this.downloadTemplate()
       }
       //2.下载模板
+
       //3.安装模板
     } catch (e) {
       log.error(e.message)
@@ -37,6 +40,7 @@ class InitCommand extends Command {
 
   //下载模板
   downloadTemplate() {
+    console.log(this.projectInfo, this.template)
     //1.通过项目模板API获取项目模板信息
     //1.1 通过egg.js搭建一套后端系统API
     //1.2 通过npm存储项目模板
@@ -46,6 +50,13 @@ class InitCommand extends Command {
 
   //准备阶段
   async prepare() {
+    //0.判断项目模板是否存在
+    const template = await getProjectTemplate()
+
+    if (!template || template.length === 0) {
+      throw new Error('项目模板不存在')
+    }
+    this.template = template
     //1.判断项目模板是否存在
     //1.1当前命令行运行的路径
     const localPath = process.cwd()
@@ -159,6 +170,12 @@ class InitCommand extends Command {
             }
           },
         },
+        {
+          type: 'list',
+          name: 'projectTemplate',
+          message: '请选择项目模板',
+          choices: this.createTemplateChoice(),
+        },
       ])
       projectInfo = {
         type,
@@ -167,6 +184,13 @@ class InitCommand extends Command {
     } else if (type === TYPE_COMPONENT) {
     }
     return projectInfo
+  }
+
+  createTemplateChoice() {
+    return this.template.map((item) => ({
+      value: item.npmName,
+      name: item.name,
+    }))
   }
 
   isDirEmpty(localPath) {

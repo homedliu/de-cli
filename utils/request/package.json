@@ -1,9 +1,9 @@
 {
-  "name": "@de-cli/init",
+  "name": "@de-cli/request",
   "version": "1.0.1",
   "description": "> TODO: description",
   "author": "LiuHongDe <262296804@qq.com>",
-  "homepage": "https://github.com/homedliu/de-cli-dev#readme",
+  "homepage": "https://github.com/homedliu/de-cli#readme",
   "license": "ISC",
   "main": "lib/index.js",
   "directories": {
@@ -18,20 +18,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/homedliu/de-cli-dev.git"
+    "url": "git+https://github.com/homedliu/de-cli.git"
   },
   "scripts": {
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "bugs": {
-    "url": "https://github.com/homedliu/de-cli-dev/issues"
+    "url": "https://github.com/homedliu/de-cli/issues"
   },
   "dependencies": {
-    "@de-cli/command": "file:../../models/command",
-    "@de-cli/log": "file:../../utils/log",
-    "@de-cli/request": "file:../../utils/request",
-    "fs-extra": "^10.0.0",
-    "inquirer": "^8.2.0",
-    "semver": "^7.3.5"
+    "axios": "^0.24.0"
   }
 }
