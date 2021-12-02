@@ -2,7 +2,11 @@
 
 const fs = require('fs')
 const fse = require('fs-extra')
+const path = require('path')
 const Command = require('@de-cli/command')
+const Package = require('@de-cli/package')
+const { spinnerStart, sleep } = require('@de-cli/utils')
+const userHome = require('os').homedir()
 const log = require('@de-cli/log')
 const inquirer = require('inquirer')
 const semver = require('semver')
@@ -10,6 +14,8 @@ const getProjectTemplate = require('./getProjectTemplate')
 
 const TYPE_PROJECT = 'project'
 const TYPE_COMPONENT = 'component'
+const TEMPLATE_TYPE_NORMAL = 'normal'
+const TEMPLATE_TYPE_CUSTOM = 'custom'
 
 class InitCommand extends Command {
   init() {
@@ -25,11 +31,11 @@ class InitCommand extends Command {
       if (projectInfo) {
         log.verbose('projectInfo', projectInfo)
         this.projectInfo = projectInfo
-        this.downloadTemplate()
+        //2.下载模板
+        await this.downloadTemplate()
+        //3.安装模板
+        await this.installTemplate()
       }
-      //2.下载模板
-
-      //3.安装模板
     } catch (e) {
       log.error(e.message)
       if (process.env.LOG_LEVEL === 'verbose') {
@@ -38,14 +44,87 @@ class InitCommand extends Command {
     }
   }
 
+  //安装模板
+  async installTemplate() {
+    if (this.templateInfo) {
+      if (!this.templateInfo.type) {
+        this.templateInfo.type = TEMPLATE_TYPE_NORMAL
+      }
+      if (this.templateInfo.type === TEMPLATE_TYPE_NORMAL) {
+        //标准安装
+        await this.installNormalTemplate()
+      } else if (this.templateInfo.type === TEMPLATE_TYPE_CUSTOM) {
+        //自定义安装
+        await this.installCustomTemplate()
+      } else {
+        throw new Error('无法识别项目模板类型！')
+      }
+    } else {
+      throw new Error('项目模板信息不存在！')
+    }
+  }
+
+  async installNormalTemplate() {
+    console.log('标准安装')
+    //拷贝模板代码至当前目录
+    const templatePath = path.resolve()
+  }
+
+  async installCustomTemplate() {
+    console.log('自定义安装')
+  }
+
   //下载模板
-  downloadTemplate() {
-    console.log(this.projectInfo, this.template)
+  async downloadTemplate() {
+    // log.verbose(this.projectInfo, this.template)
     //1.通过项目模板API获取项目模板信息
     //1.1 通过egg.js搭建一套后端系统API
     //1.2 通过npm存储项目模板
     //1.3 将项目模板信息存储到mongodb数据库中
     //1.4通过egg.js获取mongodb中的数据并且通过API返回
+
+    const { projectTemplate } = this.projectInfo
+    const templateInfo = this.template.find(
+      (item) => item.npmName === projectTemplate
+    )
+    const targetPath = path.resolve(userHome, '.de-cli', 'template')
+    const storeDir = path.resolve(targetPath, 'node_modules')
+    const { npmName, version } = templateInfo
+    this.templateInfo = templateInfo
+    const templateNpm = new Package({
+      targetPath,
+      storeDir,
+      packageName: npmName,
+      packageVersion: version,
+    })
+    if (!(await templateNpm.exists())) {
+      const spinner = spinnerStart('正在下载模板...')
+      await sleep()
+
+      try {
+        await templateNpm.install()
+        spinner.stop(true)
+        log.success('下载模板成功')
+        this.templateNpm = templateNpm
+      } catch (e) {
+        throw e
+      } finally {
+        spinner.stop(true)
+      }
+    } else {
+      const spinner = spinnerStart('正在更新模板...')
+      await sleep()
+      try {
+        await templateNpm.update()
+        spinner.stop(true)
+        log.success('更新模板成功')
+        this.templateNpm = templateNpm
+      } catch (e) {
+        throw e
+      } finally {
+        spinner.stop(true)
+      }
+    }
   }
 
   //准备阶段
@@ -57,7 +136,7 @@ class InitCommand extends Command {
       throw new Error('项目模板不存在')
     }
     this.template = template
-    //1.判断项目模板是否存在
+    //1.判断当前文件夹是否存在项目
     //1.1当前命令行运行的路径
     const localPath = process.cwd()
     if (!this.isDirEmpty(localPath)) {

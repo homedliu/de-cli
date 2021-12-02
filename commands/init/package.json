@@ -29,7 +29,9 @@
   "dependencies": {
     "@de-cli/command": "file:../../models/command",
     "@de-cli/log": "file:../../utils/log",
+    "@de-cli/package": "file:../../models/package",
     "@de-cli/request": "file:../../utils/request",
+    "@de-cli/utils": "file:../../utils/utils",
     "fs-extra": "^10.0.0",
     "inquirer": "^8.2.0",
     "semver": "^7.3.5"
