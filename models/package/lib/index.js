@@ -31,7 +31,7 @@ class Package {
     // package的缓存目录前缀
     this.cacheFilePathPrefix = this.packageName.replace('/', '_')
   }
-
+   
   async prepare() {
     if (this.storeDir && !pathExists(this.storeDir)) {
       fse.mkdirpSync(this.storeDir)

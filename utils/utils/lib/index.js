@@ -12,6 +12,18 @@ function exec(command, args, options) {
   return require('child_process').spawn(cmd, cmdArgs, options || {})
 }
 
+function execAsync(command, args, options) {
+  return new Promise((resolve, reject) => {
+    const p = exec(command, args, options)
+    p.on('error', (e) => {
+      reject(e)
+    })
+    p.on('exit', (c) => {
+      resolve(c)
+    })
+  })
+}
+
 function spinnerStart(msg, spinnerString = '|/-\\') {
   const Spinner = require('cli-spinner').Spinner
   const spinner = new Spinner(msg + ' %s')
@@ -28,4 +40,5 @@ module.exports = {
   exec,
   spinnerStart,
   sleep,
+  execAsync,
 }
