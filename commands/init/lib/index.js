@@ -98,6 +98,7 @@ class InitCommand extends Command {
 
   ejsRender(options) {
     const dir = process.cwd()
+    const projectInfo = this.projectInfo
     return new Promise((resolve, reject) => {
       glob(
         '**',
@@ -114,11 +115,12 @@ class InitCommand extends Command {
             files.map((file) => {
               const filePath = path.join(dir, file)
               return new Promise((resolve1, reject1) => {
-                ejs.renderFile(filePath, {}, (err, result) => {
-                  console.log(err, result)
+                ejs.renderFile(filePath, projectInfo, {}, (err, result) => {
                   if (err) {
                     reject1(err)
                   } else {
+                    //重新写入
+                    fse.writeFileSync(filePath, result)
                     resolve1(result)
                   }
                 })
@@ -156,7 +158,7 @@ class InitCommand extends Command {
       spinner.stop(true)
       log.success('模板安装成功！')
     }
-    const ignore = ['node_modules/**']
+    const ignore = ['node_modules/**', 'public/**']
     await this.ejsRender({ ignore })
 
     const { installCommand, startCommand } = this.templateInfo
@@ -272,7 +274,17 @@ class InitCommand extends Command {
 
   //获取需要创建项目的基本信息
   async getProjectInfo() {
+    function isValidName(v) {
+      return /^[a-zA-Z]+([-][a-zA-Z][a-zA-Z0-9]*|[_][a-zA-Z][a-zA-Z0-9]*|[a-zA-Z0-9])*$/.test(
+        v
+      )
+    }
     let projectInfo = {}
+    let isProjectNameValid = false
+    if (isValidName(this.projectName)) {
+      isProjectNameValid = true
+      projectInfo.projectName = this.projectName
+    }
     //1.选择创建项目或组件
     const { type } = await inquirer.prompt({
       type: 'list',
@@ -292,37 +304,37 @@ class InitCommand extends Command {
     })
     log.verbose('type', type)
     //2.获取项目的基本信息
-    if (type === TYPE_PROJECT) {
-      const project = await inquirer.prompt([
-        {
-          type: 'input',
-          name: 'projectName',
-          message: '请输入项目名称',
-          default: '',
-          validate(v) {
-            const done = this.async()
-            setTimeout(() => {
-              //1.首字符必须为英文字符
-              //2.尾字符必须为英文或数字，不能为字符
-              //3.字符仅容许“_-”
-              if (
-                !/^[a-zA-Z]+([-][a-zA-Z][a-zA-Z0-9]*|[_][a-zA-Z][a-zA-Z0-9]*|[a-zA-Z0-9])*$/.test(
-                  v
-                )
-              ) {
-                done('请输入合法的项目名称！')
-              }
-              done(null, true)
-            }, 0)
+    const projectNamePrompt = {
+      type: 'input',
+      name: 'projectName',
+      message: '请输入项目名称',
+      default: '',
+      validate(v) {
+        const done = this.async()
+        setTimeout(() => {
+          //1.首字符必须为英文字符
+          //2.尾字符必须为英文或数字，不能为字符
+          //3.字符仅容许“_-”
+          if (!isValidName(v)) {
+            done('请输入合法的项目名称！')
+          }
+          done(null, true)
+        }, 0)
 
-            // return /^[a-zA-Z]+([-][a-zA-Z][a-zA-Z0-9]*|[_][a-zA-Z][a-zA-Z0-9]*|[a-zA-Z0-9])*$/.test(
-            //   v
-            // )
-          },
-          filter(v) {
-            return v
-          },
-        },
+        // return /^[a-zA-Z]+([-][a-zA-Z][a-zA-Z0-9]*|[_][a-zA-Z][a-zA-Z0-9]*|[a-zA-Z0-9])*$/.test(
+        //   v
+        // )
+      },
+      filter(v) {
+        return v
+      },
+    }
+    const projectPrompt = []
+    if (!isProjectNameValid) {
+      projectPrompt.push(projectNamePrompt)
+    }
+    if (type === TYPE_PROJECT) {
+      projectPrompt.push(
         {
           type: 'input',
           name: 'projectVersion',
@@ -350,9 +362,11 @@ class InitCommand extends Command {
           name: 'projectTemplate',
           message: '请选择项目模板',
           choices: this.createTemplateChoice(),
-        },
-      ])
+        }
+      )
+      const project = await inquirer.prompt(projectPrompt)
       projectInfo = {
+        ...projectInfo,
         type,
         ...project,
       }
@@ -361,9 +375,13 @@ class InitCommand extends Command {
 
     // 生成classname
     if (projectInfo.projectName) {
+      projectInfo.name = projectInfo.projectName
       projectInfo.className = require('kebab-case')(
         projectInfo.projectName
       ).replace(/^-/, '')
+    }
+    if (projectInfo.projectVersion) {
+      projectInfo.version = projectInfo.projectVersion
     }
 
     return projectInfo
