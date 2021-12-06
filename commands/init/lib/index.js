@@ -96,7 +96,7 @@ class InitCommand extends Command {
     return ret
   }
 
-  ejsRender(options) {
+  async ejsRender(options) {
     const dir = process.cwd()
     const projectInfo = this.projectInfo
     return new Promise((resolve, reject) => {
@@ -158,18 +158,43 @@ class InitCommand extends Command {
       spinner.stop(true)
       log.success('模板安装成功！')
     }
-    const ignore = ['node_modules/**', 'public/**']
+    const tempalteIgnore = this.templateInfo.ignore || []
+    const ignore = ['**/node_modules/**', ...tempalteIgnore]
     await this.ejsRender({ ignore })
 
     const { installCommand, startCommand } = this.templateInfo
     //依赖安装
-    // await this.execCommand(installCommand, '依赖安装过程中失败！')
+    await this.execCommand(installCommand, '依赖安装过程中失败！')
     //启动命令执行
-    // await this.execCommand(startCommand, '启动命令失败！')
+    await this.execCommand(startCommand, '启动命令失败！')
   }
   //自定义安装
   async installCustomTemplate() {
-    console.log('自定义安装')
+    //查询自定义模板的入口文件
+    if (await this.templateNpm.exists()) {
+      const rootFile = this.templateNpm.getRootFilePath()
+      if (fs.existsSync(rootFile)) {
+        log.notice('开始执行自定义模板')
+        const templatePath = path.resolve(
+          this.templateNpm.cacheFilePath,
+          'template'
+        )
+        const options = {
+          templateInfo: this.templateInfo,
+          projectInfo: this.projectInfo,
+          sourcePath: templatePath,
+          targetPath: process.cwd(),
+        }
+        const code = `require('${rootFile}')(${JSON.stringify(options)})`
+        log.verbose('code', code)
+        await execAsync('node', ['-e', code], {
+          stdio: 'inherit',
+          cwd: process.cwd(),
+        })
+      } else {
+        throw new Error('自定义模板入口文件不存在！')
+      }
+    }
   }
 
   //下载模板
@@ -285,6 +310,7 @@ class InitCommand extends Command {
       isProjectNameValid = true
       projectInfo.projectName = this.projectName
     }
+
     //1.选择创建项目或组件
     const { type } = await inquirer.prompt({
       type: 'list',
@@ -303,11 +329,15 @@ class InitCommand extends Command {
       ],
     })
     log.verbose('type', type)
+    this.template = this.template.filter((template) =>
+      template.tag.includes(type)
+    )
+    const title = type === TYPE_PROJECT ? '项目' : '组件'
     //2.获取项目的基本信息
     const projectNamePrompt = {
       type: 'input',
       name: 'projectName',
-      message: '请输入项目名称',
+      message: `请输入${title}名称`,
       default: '',
       validate(v) {
         const done = this.async()
@@ -316,7 +346,7 @@ class InitCommand extends Command {
           //2.尾字符必须为英文或数字，不能为字符
           //3.字符仅容许“_-”
           if (!isValidName(v)) {
-            done('请输入合法的项目名称！')
+            done(`请输入合法的${title}名称！`)
           }
           done(null, true)
         }, 0)
@@ -333,37 +363,37 @@ class InitCommand extends Command {
     if (!isProjectNameValid) {
       projectPrompt.push(projectNamePrompt)
     }
-    if (type === TYPE_PROJECT) {
-      projectPrompt.push(
-        {
-          type: 'input',
-          name: 'projectVersion',
-          message: '请输入版本号',
-          default: '1.0.0',
-          validate(v) {
-            const done = this.async()
-            setTimeout(() => {
-              if (!!!semver.valid(v)) {
-                done('请输入合法的版本号！')
-              }
-              done(null, true)
-            }, 0)
-          },
-          filter(v) {
-            if (!!semver.valid(v)) {
-              return semver.valid(v)
-            } else {
-              return v
+    projectPrompt.push(
+      {
+        type: 'input',
+        name: 'projectVersion',
+        message: '请输入版本号',
+        default: '1.0.0',
+        validate(v) {
+          const done = this.async()
+          setTimeout(() => {
+            if (!!!semver.valid(v)) {
+              done('请输入合法的版本号！')
             }
-          },
+            done(null, true)
+          }, 0)
         },
-        {
-          type: 'list',
-          name: 'projectTemplate',
-          message: '请选择项目模板',
-          choices: this.createTemplateChoice(),
-        }
-      )
+        filter(v) {
+          if (!!semver.valid(v)) {
+            return semver.valid(v)
+          } else {
+            return v
+          }
+        },
+      },
+      {
+        type: 'list',
+        name: 'projectTemplate',
+        message: `请选择${title}模板`,
+        choices: this.createTemplateChoice(),
+      }
+    )
+    if (type === TYPE_PROJECT) {
       const project = await inquirer.prompt(projectPrompt)
       projectInfo = {
         ...projectInfo,
@@ -371,6 +401,29 @@ class InitCommand extends Command {
         ...project,
       }
     } else if (type === TYPE_COMPONENT) {
+      const descriptionPrompt = {
+        type: 'input',
+        name: 'componentDescription',
+        message: '请输入组件描述信息',
+        default: '',
+        validate(v) {
+          const done = this.async()
+          setTimeout(() => {
+            if (!v) {
+              done('请输入组件描述信息!')
+            }
+            done(null, true)
+          }, 0)
+        },
+      }
+      projectPrompt.push(descriptionPrompt)
+      //获取组件的基本信息
+      const component = await inquirer.prompt(projectPrompt)
+      projectInfo = {
+        ...projectInfo,
+        type,
+        ...component,
+      }
     }
 
     // 生成classname
@@ -382,6 +435,9 @@ class InitCommand extends Command {
     }
     if (projectInfo.projectVersion) {
       projectInfo.version = projectInfo.projectVersion
+    }
+    if (projectInfo.componentDescription) {
+      projectInfo.description = projectInfo.componentDescription
     }
 
     return projectInfo
